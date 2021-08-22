@@ -97,7 +97,9 @@ end
 
 
 function DocView:get_scrollable_size()
-  return self:get_line_height() * (#self.doc.lines - 1) + self.size.y
+  local xmargin = 3 * self:get_font():get_width(' ') -- from DocView:scroll_to_make_visible
+  return self:get_line_height() * (#self.doc.lines - 1) + self.size.y, 
+         self:get_col_x_offset(self.doc.max_line, self.doc.max_line_len) + self.size.x - xmargin
 end
 
 
