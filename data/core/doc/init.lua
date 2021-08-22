@@ -60,19 +60,30 @@ end
 
 function Doc:load(filename)
   local fp = assert( io.open(filename, "rb") )
+  local max_line_len = 0
+  local max_line = 0
   self:reset()
   self.lines = {}
+  local i = 1
   for line in fp:lines() do
     if line:byte(-1) == 13 then
       line = line:sub(1, -2)
       self.crlf = true
     end
     table.insert(self.lines, line .. "\n")
+    local line_len = string.len(line)
+    if line_len > max_line_len then
+      max_line_len = line_len
+      max_line = i
+    end
+    i = i+1
   end
   if #self.lines == 0 then
     table.insert(self.lines, "\n")
   end
   fp:close()
+  self.max_line_len = max_line_len
+  self.max_line = max_line
   self:reset_syntax()
 end
 
@@ -302,6 +313,7 @@ local function pop_undo(self, undo_stack, redo_stack, modified)
 
   if modified then
     self:on_text_change("undo")
+    self:update_max_line_len()
   end
 end
 
@@ -355,6 +367,7 @@ function Doc:insert(line, col, text)
   line, col = self:sanitize_position(line, col)
   self:raw_insert(line, col, text, self.undo_stack, system.get_time())
   self:on_text_change("insert")
+  self:update_max_line_len()
 end
 
 
@@ -365,6 +378,7 @@ function Doc:remove(line1, col1, line2, col2)
   line1, col1, line2, col2 = sort_positions(line1, col1, line2, col2)
   self:raw_remove(line1, col1, line2, col2, self.undo_stack, system.get_time())
   self:on_text_change("remove")
+  self:update_max_line_len()
 end
 
 
@@ -497,6 +511,22 @@ function Doc:indent_text(unindent, line1, col1, line2, col2)
   end
   self:insert(line1, col1, text)
   return line1, col1 + #text, line1, col1 + #text
+end
+
+function Doc:update_max_line_len()
+  local max_line = self.max_line
+  local max_line_len = self.max_line_len
+  local i = 1
+  while i < #self.lines do
+    local line_len = string.len(self.lines[i])
+    if line_len > max_line_len then
+      max_line_len = line_len
+      max_line = i
+    end
+    i = i + 1
+  end
+  self.max_line_len = max_line_len
+  self.max_line = max_line
 end
 
 -- For plugins to add custom actions of document change
