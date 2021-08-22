@@ -32,6 +32,8 @@ end
 
 function Doc:reset()
   self.lines = { "\n" }
+  self.max_line = 1
+  self.max_line_len = 0
   self.selections = { 1, 1, 1, 1 }
   self.cursor_clipboard = {}
   self.undo_stack = { idx = 1 }
