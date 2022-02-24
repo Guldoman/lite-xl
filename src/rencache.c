@@ -16,19 +16,30 @@
 #define CELLS_Y 50
 #define CELL_SIZE 96
 #define COMMAND_BUF_SIZE (1024 * 512)
-#define COMMAND_BARE_SIZE offsetof(Command, text)
+#define COMMAND_BARE_SIZE sizeof(Command)
 
 enum { SET_CLIP, DRAW_TEXT, DRAW_RECT };
 
 typedef struct {
   int8_t type;
-  int8_t tab_size;
   int32_t size;
   RenRect rect;
-  RenColor color;
-  RenFont *fonts[FONT_FALLBACK_MAX];
-  float text_x;
-  char text[0];
+  union {
+    struct {
+    } clip;
+
+    struct {
+      int8_t tab_size;
+      RenColor color;
+      RenFont *fonts[FONT_FALLBACK_MAX];
+      float text_x;
+      char buf[0];
+    } text;
+
+    struct {
+      RenColor color;
+    } rect;
+  } data;
 } Command;
 
 static unsigned cells_buf1[CELLS_X * CELLS_Y];
@@ -130,7 +141,7 @@ void rencache_draw_rect(RenRect rect, RenColor color) {
   Command *cmd = push_command(DRAW_RECT, COMMAND_BARE_SIZE);
   if (cmd) {
     cmd->rect = rect;
-    cmd->color = color;
+    cmd->data.rect.color = color;
   }
 }
 
@@ -142,12 +153,12 @@ float rencache_draw_text(lua_State *L, RenFont **fonts, const char *text, float 
     int sz = strlen(text) + 1;
     Command *cmd = push_command(DRAW_TEXT, COMMAND_BARE_SIZE + sz);
     if (cmd) {
-      memcpy(cmd->text, text, sz);
-      cmd->color = color;
-      memcpy(cmd->fonts, fonts, sizeof(RenFont*)*FONT_FALLBACK_MAX);
+      memcpy(cmd->data.text.buf, text, sz);
+      cmd->data.text.color = color;
+      memcpy(cmd->data.text.fonts, fonts, sizeof(RenFont*)*FONT_FALLBACK_MAX);
       cmd->rect = rect;
-      cmd->text_x = x;
-      cmd->tab_size = ren_font_group_get_tab_size(fonts);
+      cmd->data.text.text_x = x;
+      cmd->data.text.tab_size = ren_font_group_get_tab_size(fonts);
     }
   }
   return x + width;
@@ -251,11 +262,11 @@ void rencache_end_frame(lua_State *L) {
           ren_set_clip_rect(intersect_rects(cmd->rect, r));
           break;
         case DRAW_RECT:
-          ren_draw_rect(cmd->rect, cmd->color);
+          ren_draw_rect(cmd->rect, cmd->data.rect.color);
           break;
         case DRAW_TEXT:
-          ren_font_group_set_tab_size(cmd->fonts, cmd->tab_size);
-          ren_draw_text(cmd->fonts, cmd->text, cmd->text_x, cmd->rect.y, cmd->color);
+          ren_font_group_set_tab_size(cmd->data.text.fonts, cmd->data.text.tab_size);
+          ren_draw_text(cmd->data.text.fonts, cmd->data.text.buf, cmd->data.text.text_x, cmd->rect.y, cmd->data.text.color);
           break;
       }
     }
