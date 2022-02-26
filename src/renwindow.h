@@ -1,7 +1,7 @@
 #include <SDL.h>
 #include "renderer.h"
 
-struct RenWindow {
+typedef struct {
   SDL_Window *window;
   RenRect clip; /* Clipping rect in pixel coordinates. */
 #ifdef LITE_USE_SDL_RENDERER
@@ -10,8 +10,7 @@ struct RenWindow {
   SDL_Surface *surface;
   int surface_scale;
 #endif
-};
-typedef struct RenWindow RenWindow;
+} RenWindow;
 
 void renwin_init_surface(RenWindow *ren);
 int  renwin_surface_scale(RenWindow *ren);
