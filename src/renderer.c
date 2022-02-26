@@ -15,7 +15,7 @@
 #define MAX_LOADABLE_GLYPHSETS 1024
 #define SUBPIXEL_BITMAPS_CACHED 3
 
-static RenWindow window_renderer = {0};
+RenWindow window_renderer = {0};
 static FT_Library library;
 
 static void* check_alloc(void *ptr) {
@@ -257,8 +257,7 @@ float ren_font_group_get_width(RenFont **fonts, const char *text) {
   return width / surface_scale;
 }
 
-float ren_draw_text(RenFont **fonts, const char *text, float x, int y, RenColor color) {
-  SDL_Surface *surface = renwin_get_surface(&window_renderer);
+float ren_draw_text(SDL_Surface *surface, RenFont **fonts, const char *text, float x, int y, RenColor color) {
   const RenRect clip = window_renderer.clip;
 
   const int surface_scale = renwin_surface_scale(&window_renderer);
@@ -278,7 +277,7 @@ float ren_draw_text(RenFont **fonts, const char *text, float x, int y, RenColor 
     int end_x = (metric->x1 - metric->x0) + start_x;
     int glyph_end = metric->x1, glyph_start = metric->x0;
     if (!metric->loaded && codepoint > 0xFF)
-      ren_draw_rect((RenRect){ start_x + 1, y, font->space_advance - 1, ren_font_group_get_height(fonts) }, color);
+      ren_draw_rect(surface, (RenRect){ start_x + 1, y, font->space_advance - 1, ren_font_group_get_height(fonts) }, color);
     if (set->surface && color.a > 0 && end_x >= clip.x && start_x < clip_end_x) {
       unsigned char* source_pixels = set->surface->pixels;
       for (int line = metric->y0; line < metric->y1; ++line) {
@@ -310,7 +309,7 @@ float ren_draw_text(RenFont **fonts, const char *text, float x, int y, RenColor 
     pen_x += metric->xadvance ? metric->xadvance : font->space_advance;
   }
   if (fonts[0]->style & FONT_STYLE_UNDERLINE)
-    ren_draw_rect((RenRect){ x, y / surface_scale + ren_font_group_get_height(fonts) - 1, (pen_x - x) / surface_scale, 1 }, color);
+    ren_draw_rect(surface, (RenRect){ x, y / surface_scale + ren_font_group_get_height(fonts) - 1, (pen_x - x) / surface_scale, 1 }, color);
   return pen_x / surface_scale;
 }
 
@@ -323,7 +322,7 @@ static inline RenColor blend_pixel(RenColor dst, RenColor src) {
   return dst;
 }
 
-void ren_draw_rect(RenRect rect, RenColor color) {
+void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color) {
   if (color.a == 0) { return; }
 
   const int surface_scale = renwin_surface_scale(&window_renderer);
@@ -342,7 +341,6 @@ void ren_draw_rect(RenRect rect, RenColor color) {
   x2 = x2 > clip.x + clip.width ? clip.x + clip.width : x2;
   y2 = y2 > clip.y + clip.height ? clip.y + clip.height : y2;
 
-  SDL_Surface *surface = renwin_get_surface(&window_renderer);
   uint32_t *d = surface->pixels;
   d += x1 + y1 * surface->w;
   int dr = surface->w - (x2 - x1);

@@ -6,6 +6,7 @@
 
 #include <lauxlib.h>
 #include "rencache.h"
+#include "renwindow.h"
 
 /* a cache over the software renderer -- all drawing operations are stored as
 ** commands when issued. At the end of the frame we write the commands to a grid
@@ -51,6 +52,8 @@ static char command_buf[COMMAND_BUF_SIZE];
 static int command_buf_idx;
 static RenRect screen_rect;
 static bool show_debug;
+
+extern RenWindow window_renderer;
 
 static inline int min(int a, int b) { return a < b ? a : b; }
 static inline int max(int a, int b) { return a > b ? a : b; }
@@ -254,6 +257,7 @@ void rencache_end_frame(lua_State *L) {
     /* draw */
     RenRect r = rect_buf[i];
     ren_set_clip_rect(r);
+    SDL_Surface *window_surface = renwin_get_surface(&window_renderer);
 
     cmd = NULL;
     while (next_command(&cmd)) {
@@ -262,18 +266,18 @@ void rencache_end_frame(lua_State *L) {
           ren_set_clip_rect(intersect_rects(cmd->rect, r));
           break;
         case DRAW_RECT:
-          ren_draw_rect(cmd->rect, cmd->data.rect.color);
+          ren_draw_rect(window_surface, cmd->rect, cmd->data.rect.color);
           break;
         case DRAW_TEXT:
           ren_font_group_set_tab_size(cmd->data.text.fonts, cmd->data.text.tab_size);
-          ren_draw_text(cmd->data.text.fonts, cmd->data.text.buf, cmd->data.text.text_x, cmd->rect.y, cmd->data.text.color);
+          ren_draw_text(window_surface, cmd->data.text.fonts, cmd->data.text.buf, cmd->data.text.text_x, cmd->rect.y, cmd->data.text.color);
           break;
       }
     }
 
     if (show_debug) {
       RenColor color = { rand(), rand(), rand(), 50 };
-      ren_draw_rect(r, color);
+      ren_draw_rect(window_surface, r, color);
     }
   }
 
