@@ -266,7 +266,7 @@ void rencache_end_frame(lua_State *L) {
           ren_set_clip_rect(intersect_rects(cmd->rect, r));
           break;
         case DRAW_RECT:
-          ren_draw_rect(window_surface, cmd->rect, cmd->data.rect.color);
+          ren_draw_rect(window_surface, cmd->rect, cmd->data.rect.color, true);
           break;
         case DRAW_TEXT:
           ren_font_group_set_tab_size(cmd->data.text.fonts, cmd->data.text.tab_size);
@@ -277,7 +277,7 @@ void rencache_end_frame(lua_State *L) {
 
     if (show_debug) {
       RenColor color = { rand(), rand(), rand(), 50 };
-      ren_draw_rect(window_surface, r, color);
+      ren_draw_rect(window_surface, r, color, true);
     }
   }
 

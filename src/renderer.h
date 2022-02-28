@@ -25,7 +25,7 @@ void ren_font_group_set_tab_size(RenFont **font, int n);
 float ren_font_group_get_width(RenFont **font, const char *text);
 float ren_draw_text(SDL_Surface *surface, RenFont **font, const char *text, float x, int y, RenColor color);
 
-void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color);
+void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blend);
 
 void ren_init(SDL_Window *win);
 void ren_resize_window();

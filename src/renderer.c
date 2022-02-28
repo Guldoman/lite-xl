@@ -17,6 +17,7 @@
 
 RenWindow window_renderer = {0};
 static FT_Library library;
+static SDL_Surface *draw_rect_surface;
 
 static void* check_alloc(void *ptr) {
   if (!ptr) {
@@ -278,7 +279,7 @@ float ren_draw_text(SDL_Surface *surface, RenFont **fonts, const char *text, flo
     int end_x = (metric->x1 - metric->x0) + start_x;
     int glyph_end = metric->x1, glyph_start = metric->x0;
     if (!metric->loaded && codepoint > 0xFF)
-      ren_draw_rect(surface, (RenRect){ start_x + 1, y, font->space_advance - 1, ren_font_group_get_height(fonts) }, color);
+      ren_draw_rect(surface, (RenRect){ start_x + 1, y, font->space_advance - 1, ren_font_group_get_height(fonts) }, color, true);
     if (set->surface && color.a > 0 && end_x >= clip.x && start_x < clip_end_x) {
       unsigned char* source_pixels = set->surface->pixels;
       for (int line = metric->y0; line < metric->y1; ++line) {
@@ -310,7 +311,7 @@ float ren_draw_text(SDL_Surface *surface, RenFont **fonts, const char *text, flo
     pen_x += metric->xadvance ? metric->xadvance : font->space_advance;
   }
   if (fonts[0]->style & FONT_STYLE_UNDERLINE)
-    ren_draw_rect(surface, (RenRect){ x, y / surface_scale + ren_font_group_get_height(fonts) - 1, (pen_x - x) / surface_scale, 1 }, color);
+    ren_draw_rect(surface, (RenRect){ x, y / surface_scale + ren_font_group_get_height(fonts) - 1, (pen_x - x) / surface_scale, 1 }, color, true);
   return pen_x / surface_scale;
 }
 
@@ -323,51 +324,49 @@ static inline RenColor blend_pixel(RenColor dst, RenColor src) {
   return dst;
 }
 
-void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color) {
-  if (color.a == 0) { return; }
+void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blend) {
+  if (color.a == 0 && blend) { return; }
 
   const int surface_scale = renwin_surface_scale(&window_renderer);
+  SDL_Rect *dest_rect = RenRect_to_SDL(&rect);
 
   /* transforms coordinates in pixels. */
-  rect.x      *= surface_scale;
-  rect.y      *= surface_scale;
-  rect.width  *= surface_scale;
-  rect.height *= surface_scale;
+  if (dest_rect)
+  {
+    dest_rect->x *= surface_scale;
+    dest_rect->y *= surface_scale;
+    dest_rect->w *= surface_scale;
+    dest_rect->h *= surface_scale;
+  }
 
-  SDL_Rect clip;
-  SDL_GetClipRect(surface, &clip);
-  int x1 = rect.x < clip.x ? clip.x : rect.x;
-  int y1 = rect.y < clip.y ? clip.y : rect.y;
-  int x2 = rect.x + rect.width;
-  int y2 = rect.y + rect.height;
-  x2 = x2 > clip.x + clip.w ? clip.x + clip.w : x2;
-  y2 = y2 > clip.y + clip.h ? clip.y + clip.h : y2;
+  if (blend && color.a < 0xFF){
+    // We cannot trust the clipping provided by SDL in this case because of
+    // rounding errors caused by the scaling of a 1x1 surface
+    SDL_Rect clip;
+    SDL_GetClipRect(surface, &clip);
+    int x1 = dest_rect->x < clip.x ? clip.x : dest_rect->x;
+    int y1 = dest_rect->y < clip.y ? clip.y : dest_rect->y;
+    int x2 = dest_rect->x + dest_rect->w;
+    int y2 = dest_rect->y + dest_rect->h;
+    x2 = x2 > clip.x + clip.w ? clip.x + clip.w : x2;
+    y2 = y2 > clip.y + clip.h ? clip.y + clip.h : y2;
+    dest_rect->x = x1;
+    dest_rect->y = y1;
+    dest_rect->w = x2-x1;
+    dest_rect->h = y2-y1;
 
-  uint32_t *d = surface->pixels;
-  d += x1 + y1 * surface->w;
-  int dr = surface->w - (x2 - x1);
-  if (color.a == 0xff) {
-    uint32_t translated = SDL_MapRGB(surface->format, color.r, color.g, color.b);
-    SDL_Rect rect = { x1, y1, x2 - x1, y2 - y1 };
-    SDL_FillRect(surface, &rect, translated);
+    uint32_t *pixel = (uint32_t *)draw_rect_surface->pixels;
+    *pixel = SDL_MapRGBA(draw_rect_surface->format, color.r, color.g, color.b, color.a);
+    SDL_BlitScaled(draw_rect_surface, NULL, surface, dest_rect);
   } else {
-    RenColor current_color;
-    RenColor blended_color;
-    for (int j = y1; j < y2; j++) {
-      for (int i = x1; i < x2; i++, d++)
-      {
-        SDL_GetRGB(*d, surface->format, &current_color.r, &current_color.g, &current_color.b);
-        blended_color = blend_pixel(current_color, color);
-        *d = SDL_MapRGB(surface->format, blended_color.r, blended_color.g, blended_color.b);
-      }
-      d += dr;
-    }
+    SDL_FillRect(surface, dest_rect, SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a));
   }
 }
 
 /*************** Window Management ****************/
 void ren_free_window_resources() {
   renwin_free(&window_renderer);
+  SDL_FreeSurface(draw_rect_surface);
 }
 
 void ren_init(SDL_Window *win) {
@@ -380,6 +379,8 @@ void ren_init(SDL_Window *win) {
   window_renderer.window = win;
   renwin_init_surface(&window_renderer);
   renwin_clip_to_surface(&window_renderer);
+  draw_rect_surface = SDL_CreateRGBSurface(0, 1, 1, 32,
+                        0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
 }
 
 
