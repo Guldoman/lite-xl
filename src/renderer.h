@@ -27,6 +27,8 @@ float ren_draw_text(SDL_Surface *surface, RenFont **font, const char *text, floa
 
 void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blend);
 
+void ren_draw_surface(SDL_Surface *src, RenRect from, SDL_Surface *dst, RenRect to);
+
 void ren_init(SDL_Window *win);
 void ren_resize_window();
 void ren_update_rects(RenRect *rects, int count);

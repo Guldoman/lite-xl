@@ -17,6 +17,7 @@
 
 RenWindow window_renderer = {0};
 static FT_Library library;
+// draw_rect_surface is used as a 1x1 surface to simplify ren_draw_rect with blending
 static SDL_Surface *draw_rect_surface;
 
 static void* check_alloc(void *ptr) {
@@ -316,13 +317,6 @@ float ren_draw_text(SDL_Surface *surface, RenFont **fonts, const char *text, flo
 }
 
 /******************* Rectangles **********************/
-static inline RenColor blend_pixel(RenColor dst, RenColor src) {
-  int ia = 0xff - src.a;
-  dst.r = ((src.r * src.a) + (dst.r * ia)) >> 8;
-  dst.g = ((src.g * src.a) + (dst.g * ia)) >> 8;
-  dst.b = ((src.b * src.a) + (dst.b * ia)) >> 8;
-  return dst;
-}
 
 void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blend) {
   if (color.a == 0 && blend) { return; }
@@ -363,7 +357,32 @@ void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blen
   }
 }
 
+/**************** Surface blitting *****************/
+
+void ren_draw_surface(SDL_Surface *src, RenRect from, SDL_Surface *dst, RenRect to)
+{
+  SDL_Rect *f = RenRect_to_SDL(&from);
+  SDL_Rect *t = RenRect_to_SDL(&to);
+  const int surface_scale = renwin_surface_scale(&window_renderer);
+  /* transforms coordinates in pixels. */
+  if(f) {
+    f->x      = f->x * surface_scale;
+    f->y      = f->y * surface_scale;
+    f->w      = f->w * surface_scale;
+    f->h      = f->h * surface_scale;
+  }
+  if (t) {
+    t->x      = t->x * surface_scale;
+    t->y      = t->y * surface_scale;
+    t->w      = t->w * surface_scale;
+    t->h      = t->h * surface_scale;
+  }
+
+  SDL_BlitScaled(src, f, dst, t);
+}
+
 /*************** Window Management ****************/
+
 void ren_free_window_resources() {
   renwin_free(&window_renderer);
   SDL_FreeSurface(draw_rect_surface);
