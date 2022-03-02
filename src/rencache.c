@@ -19,7 +19,7 @@
 #define COMMAND_BUF_SIZE (1024 * 512)
 #define COMMAND_BARE_SIZE sizeof(Command)
 
-enum { SET_CLIP, DRAW_TEXT, DRAW_RECT };
+enum { SET_CLIP, DRAW_TEXT, DRAW_RECT, DRAW_TEXTURE };
 
 typedef struct {
   int8_t type;
@@ -40,6 +40,10 @@ typedef struct {
     struct {
       RenColor color;
     } rect;
+
+    struct {
+      RenSurface surface;
+    } texture;
   } data;
 } Command;
 
@@ -148,8 +152,7 @@ void rencache_draw_rect(RenRect rect, RenColor color) {
   }
 }
 
-float rencache_draw_text(lua_State *L, RenFont **fonts, const char *text, float x, int y, RenColor color)
-{
+float rencache_draw_text(lua_State *L, RenFont **fonts, const char *text, float x, int y, RenColor color) {
   float width = ren_font_group_get_width(fonts, text);
   RenRect rect = { x, y, (int)width, ren_font_group_get_height(fonts) };
   if (rects_overlap(screen_rect, rect)) {
@@ -165,6 +168,18 @@ float rencache_draw_text(lua_State *L, RenFont **fonts, const char *text, float 
     }
   }
   return x + width;
+}
+
+void rencache_draw_texture(RenRect rect, RenSurface surface, RenRect source) {
+  if (!rects_overlap(screen_rect, rect) || rect.width == 0 || rect.height == 0) {
+    return;
+  }
+  Command *cmd = push_command(DRAW_TEXTURE, COMMAND_BARE_SIZE);
+  if (cmd) {
+    cmd->rect = rect;
+    cmd->data.texture.surface = surface;
+    cmd->data.texture.surface.s->refcount++;
+  }
 }
 
 
@@ -213,11 +228,30 @@ static void push_rect(RenRect r, int *count) {
   rect_buf[(*count)++] = r;
 }
 
+/* use SDL_Surface->userdata to keep a linked list of unique surfaces */
+static void add_to_surface_list(SDL_Surface **list, SDL_Surface *s) {
+  if (!*list) {
+    *list = s;
+    return;
+  }
+  SDL_Surface *current = *list;
+  while (current != s)
+  {
+    if (current->userdata == NULL)
+    {
+      current->userdata = s;
+      return;
+    }
+    current = current->userdata;
+  }
+}
+
 
 void rencache_end_frame(lua_State *L) {
   /* update cells from commands */
   Command *cmd = NULL;
   RenRect cr = screen_rect;
+  SDL_Surface *to_free = NULL;
   while (next_command(&cmd)) {
     if (cmd->type == SET_CLIP) { cr = cmd->rect; }
     RenRect r = intersect_rects(cmd->rect, cr);
@@ -225,6 +259,12 @@ void rencache_end_frame(lua_State *L) {
     unsigned h = HASH_INITIAL;
     hash(&h, cmd, cmd->size);
     update_overlapping_cells(r, h);
+
+    if(cmd->type == DRAW_TEXTURE) {
+      cmd->data.texture.surface.s->refcount--;
+      if (cmd->data.texture.surface.s->refcount == 0)
+        add_to_surface_list(&to_free, cmd->data.texture.surface.s);
+    }
   }
 
   /* push rects for all cells changed from last frame, reset cells */
@@ -252,12 +292,13 @@ void rencache_end_frame(lua_State *L) {
     *r = intersect_rects(*r, screen_rect);
   }
 
+  SDL_Surface *window_surface = renwin_get_surface(&window_renderer);
+
   /* redraw updated regions */
   for (int i = 0; i < rect_count; i++) {
     /* draw */
     RenRect r = rect_buf[i];
     ren_set_clip_rect(r);
-    SDL_Surface *window_surface = renwin_get_surface(&window_renderer);
 
     cmd = NULL;
     while (next_command(&cmd)) {
@@ -272,6 +313,9 @@ void rencache_end_frame(lua_State *L) {
           ren_font_group_set_tab_size(cmd->data.text.fonts, cmd->data.text.tab_size);
           ren_draw_text(window_surface, cmd->data.text.fonts, cmd->data.text.buf, cmd->data.text.text_x, cmd->rect.y, cmd->data.text.color);
           break;
+        case DRAW_TEXTURE:
+          ren_draw_surface(cmd->data.texture.surface.s, cmd->data.texture.surface.area, window_surface, cmd->rect);
+          break;
       }
     }
 
@@ -279,6 +323,14 @@ void rencache_end_frame(lua_State *L) {
       RenColor color = { rand(), rand(), rand(), 50 };
       ren_draw_rect(window_surface, r, color, true);
     }
+  }
+
+  /* free unneeded surfaces */
+  while(to_free)
+  {
+    SDL_Surface *s = to_free;
+    to_free = s->userdata;
+    SDL_FreeSurface(s);
   }
 
   /* update dirty rects */

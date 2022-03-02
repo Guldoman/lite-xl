@@ -219,6 +219,17 @@ static int f_draw_text(lua_State *L) {
   return 1;
 }
 
+static int f_draw_texture(lua_State *L) {
+  RenSurface *rs = luaL_checkudata(L, 1, API_TYPE_TEXTURE);
+  lua_Number x = luaL_checknumber(L, 2);
+  lua_Number y = luaL_checknumber(L, 3);
+  lua_Number w = rs->area.width;
+  lua_Number h = rs->area.height;
+  RenRect rect = rect_to_grid(x, y, w, h);
+  rencache_draw_texture(rect, *rs, (RenRect){0, 0, w, h});
+  return 0;
+}
+
 static const luaL_Reg lib[] = {
   { "show_debug",         f_show_debug         },
   { "get_size",           f_get_size           },
@@ -227,6 +238,7 @@ static const luaL_Reg lib[] = {
   { "set_clip_rect",      f_set_clip_rect      },
   { "draw_rect",          f_draw_rect          },
   { "draw_text",          f_draw_text          },
+  { "draw_texture",       f_draw_texture       },
   { NULL,                 NULL                 }
 };
 
