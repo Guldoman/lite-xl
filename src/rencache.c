@@ -314,7 +314,7 @@ void rencache_end_frame(lua_State *L) {
           ren_draw_text(window_surface, cmd->data.text.fonts, cmd->data.text.buf, cmd->data.text.text_x, cmd->rect.y, cmd->data.text.color);
           break;
         case DRAW_TEXTURE:
-          ren_draw_surface(cmd->data.texture.surface.s, cmd->data.texture.surface.area, window_surface, cmd->rect);
+          ren_draw_surface(cmd->data.texture.surface.s, cmd->data.texture.surface.area, window_surface, cmd->rect, true);
           break;
       }
     }

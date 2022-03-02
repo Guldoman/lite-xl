@@ -359,8 +359,7 @@ void ren_draw_rect(SDL_Surface *surface, RenRect rect, RenColor color, bool blen
 
 /**************** Surface blitting *****************/
 
-void ren_draw_surface(SDL_Surface *src, RenRect from, SDL_Surface *dst, RenRect to)
-{
+void ren_draw_surface(SDL_Surface *src, RenRect from, SDL_Surface *dst, RenRect to, bool blend) {
   SDL_Rect *f = RenRect_to_SDL(&from);
   SDL_Rect *t = RenRect_to_SDL(&to);
   const int surface_scale = renwin_surface_scale(&window_renderer);
@@ -378,7 +377,15 @@ void ren_draw_surface(SDL_Surface *src, RenRect from, SDL_Surface *dst, RenRect 
     t->h      = t->h * surface_scale;
   }
 
-  SDL_BlitScaled(src, f, dst, t);
+  if (!blend) {
+    SDL_BlendMode orig_bm;
+    SDL_GetSurfaceBlendMode(src, &orig_bm);
+    SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_NONE);
+    SDL_BlitScaled(src, f, dst, t);
+    SDL_SetSurfaceBlendMode(src, orig_bm);
+  } else {
+    SDL_BlitScaled(src, f, dst, t);
+  }
 }
 
 /*************** Window Management ****************/
