@@ -59,7 +59,7 @@ static int f_font_load(lua_State *L) {
 
 static bool font_retrieve(lua_State* L, RenFont** fonts, int idx) {
   memset(fonts, 0, sizeof(RenFont*)*FONT_FALLBACK_MAX);
-  if (lua_type(L, 1) != LUA_TTABLE) {
+  if (lua_type(L, idx) != LUA_TTABLE) {
     fonts[0] = *(RenFont**)luaL_checkudata(L, idx, API_TYPE_FONT);
     return false;
   }
