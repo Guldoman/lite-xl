@@ -116,19 +116,20 @@ static int f_texture_set_pixels(lua_State *L) {
 
   int size = luaL_len(L, 2);
   if (size != rr.width * rr.height)
-    return luaL_error(L, "mismatching pixel data and sizes, got %d pixels, needed %d", size, rr.width * rr.height);
+    return luaL_error(L, "mismatching pixel data and sizes, got %d pixels, needed %d",
+                      size, rr.width * rr.height);
 
+  RenColor rc;
   int c = 1;
   for (int j = rr.y; j < rr.y + rr.height; j++)
   {
-    uint32_t *pixels = s->pixels + j * s->pitch + rr.x;
+    uint8_t *pixels = (uint8_t *)s->pixels + j * s->pitch + rr.x * s->format->BytesPerPixel;
     for (int i = rr.x; i < rr.x + rr.width; i++)
     {
       lua_geti(L, 2, c++);
-      SDL_Color c;
-      uint32_t p = luaL_checkinteger(L, -1);
-      SDL_GetRGBA(p, s->format, &c.r, &c.g, &c.b, &c.a);
-      *pixels++ = p;
+      rc = parse_color(L, -1);
+      *(uint32_t *)pixels = SDL_MapRGBA(s->format, rc.r, rc.g, rc.b, rc.a);
+      pixels += s->format->BytesPerPixel;
       lua_pop(L, 1);
     }
   }
