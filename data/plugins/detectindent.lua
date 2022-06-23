@@ -115,11 +115,16 @@ local function get_comment_patterns(syntax)
           startp = "^\\s*" .. startp:sub(2, startp:len())
         end
         if type(pattern.regex) == "table" then
-          table.insert(comments, {
-            "r", regex.compile(startp), regex.compile(pattern.regex[2])
-          })
+          local start_regex, err1 = regex.compile(startp)
+          local end_regex, err2 = regex.compile(pattern.regex[2])
+          if not err1 and not err2 then
+            table.insert(comments, {"r", start_regex, end_regex})
+          end
         elseif not_is_string then
-          table.insert(comments, {"r", regex.compile(startp)})
+          local start_regex, err = regex.compile(startp)
+          if not err then
+            table.insert(comments, {"r", start_regex})
+          end
         end
       end
     elseif pattern.syntax then
