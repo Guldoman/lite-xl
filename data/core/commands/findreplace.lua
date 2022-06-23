@@ -215,7 +215,12 @@ command.add("core.docview", {
       if not find_regex then
         return text:gsub(old:gsub("%W", "%%%1"), new:gsub("%%", "%%%%"), nil)
       end
-      local result, matches = regex.gsub(regex.compile(old, "m"), text, new)
+      local compiled, err = regex.compile(old, "m")
+      if not compiled then
+        core.error("Malformed regex: %s", err)
+        return text, 0
+      end
+      local result, matches = regex.gsub(compiled, text, new)
       return result, #matches
     end)
   end,
