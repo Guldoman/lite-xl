@@ -3,8 +3,17 @@
 regex.__index = function(table, key) return regex[key]; end
 
 regex.match = function(pattern_string, string, offset, options)
-  local pattern = type(pattern_string) == "table" and
-    pattern_string or regex.compile(pattern_string)
+  if not pattern_string then
+    return nil, "No regex specified"
+  end
+  local pattern = pattern_string
+  if type(pattern_string) ~= "table" then
+    local err
+    pattern, err = regex.compile(pattern_string)
+    if not pattern then
+      return nil, err
+    end
+  end
   local res = { regex.cmatch(pattern, string, offset or 1, options or 0) }
   res[2] = res[2] and res[2] - 1
   return table.unpack(res)
@@ -37,8 +46,17 @@ end
 -- as \1 - \9.
 -- Should work on UTF-8 text.
 regex.gsub = function(pattern_string, str, replacement)
-  local pattern = type(pattern_string) == "table" and
-    pattern_string or regex.compile(pattern_string)
+  if not pattern_string then
+    return nil, "No regex specified"
+  end
+  local pattern = pattern_string
+  if type(pattern_string) ~= "table" then
+    local err
+    pattern, err = regex.compile(pattern_string)
+    if not pattern then
+      return nil, err
+    end
+  end
   local result, indices = ""
   local matches, replacements = {}, {}
   repeat
