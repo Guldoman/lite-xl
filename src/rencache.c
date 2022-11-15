@@ -17,6 +17,7 @@
 
 #include <lauxlib.h>
 #include "rencache.h"
+#include "renwindow.h"
 
 /* a cache over the software renderer -- all drawing operations are stored as
 ** commands when issued. At the end of the frame we write the commands to a grid
@@ -55,6 +56,8 @@ static bool show_debug;
 
 static inline int rencache_min(int a, int b) { return a < b ? a : b; }
 static inline int rencache_max(int a, int b) { return a > b ? a : b; }
+
+extern RenWindow window_renderer;
 
 
 /* 32bit fnv-1a hash */
@@ -252,6 +255,7 @@ void rencache_end_frame() {
   }
 
   /* redraw updated regions */
+  RenSurface rs = renwin_get_surface(&window_renderer);
   for (int i = 0; i < rect_count; i++) {
     /* draw */
     RenRect r = rect_buf[i];
@@ -264,18 +268,18 @@ void rencache_end_frame() {
           ren_set_clip_rect(intersect_rects(cmd->rect, r));
           break;
         case DRAW_RECT:
-          ren_draw_rect(cmd->rect, cmd->color);
+          ren_draw_rect(&rs, cmd->rect, cmd->color);
           break;
         case DRAW_TEXT:
           ren_font_group_set_tab_size(cmd->fonts, cmd->tab_size);
-          ren_draw_text(cmd->fonts, cmd->text, cmd->len, cmd->text_x, cmd->rect.y, cmd->color);
+          ren_draw_text(&rs, cmd->fonts, cmd->text, cmd->len, cmd->text_x, cmd->rect.y, cmd->color);
           break;
       }
     }
 
     if (show_debug) {
       RenColor color = { rand(), rand(), rand(), 50 };
-      ren_draw_rect(r, color);
+      ren_draw_rect(&rs, r, color);
     }
   }
 
@@ -290,4 +294,3 @@ void rencache_end_frame() {
   cells_prev = tmp;
   command_buf_idx = 0;
 }
-

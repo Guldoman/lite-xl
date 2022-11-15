@@ -44,7 +44,7 @@ void renwin_init_surface(UNUSED RenWindow *ren) {
 #endif
 }
 
-int renwin_surface_scale(UNUSED RenWindow *ren) {
+static int renwin_surface_scale(UNUSED RenWindow *ren) {
 #ifdef LITE_USE_SDL_RENDERER
   return ren->surface_scale;
 #else
@@ -59,7 +59,8 @@ static RenRect scaled_rect(const RenRect rect, const int scale) {
 
 
 void renwin_clip_to_surface(RenWindow *ren) {
-  SDL_Surface *surface = renwin_get_surface(ren);
+  RenSurface rs = renwin_get_surface(ren);
+  SDL_Surface *surface = rs.surface;
   ren->clip = (RenRect) {0, 0, surface->w, surface->h};
 }
 
@@ -69,16 +70,20 @@ void renwin_set_clip_rect(RenWindow *ren, RenRect rect) {
 }
 
 
-SDL_Surface *renwin_get_surface(RenWindow *ren) {
+RenSurface renwin_get_surface(RenWindow *ren) {
+  RenSurface rs;
+  rs.scale = renwin_surface_scale(ren);
 #ifdef LITE_USE_SDL_RENDERER
-  return ren->surface;
+  rs.surface = ren->surface;
+  return rs;
 #else
   SDL_Surface *surface = SDL_GetWindowSurface(ren->window);
   if (!surface) {
     fprintf(stderr, "Error getting window surface: %s", SDL_GetError());
     exit(1);
   }
-  return surface;
+  rs.surface = surface;
+  return rs;
 #endif
 }
 
