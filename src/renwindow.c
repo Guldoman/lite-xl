@@ -53,20 +53,22 @@ static int renwin_surface_scale(UNUSED RenWindow *ren) {
 }
 
 
-static RenRect scaled_rect(const RenRect rect, const int scale) {
-  return (RenRect) {rect.x * scale, rect.y * scale, rect.width * scale, rect.height * scale};
-}
-
-
 void renwin_clip_to_surface(RenWindow *ren) {
   RenSurface rs = renwin_get_surface(ren);
   SDL_Surface *surface = rs.surface;
-  ren->clip = (RenRect) {0, 0, surface->w, surface->h};
+  SDL_SetClipRect(surface, NULL);
 }
 
 
 void renwin_set_clip_rect(RenWindow *ren, RenRect rect) {
-  ren->clip = scaled_rect(rect, renwin_surface_scale(ren));
+  RenSurface rs = renwin_get_surface(ren);
+  SDL_Surface *surface = rs.surface;
+  SDL_SetClipRect(surface, &(const SDL_Rect) {
+    rect.x * rs.scale,
+    rect.y * rs.scale,
+    rect.width * rs.scale,
+    rect.height * rs.scale
+  });
 }
 
 

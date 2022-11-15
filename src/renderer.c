@@ -379,7 +379,8 @@ float ren_font_group_get_width(RenFont **fonts, const char *text, size_t len) {
 
 float ren_draw_text(RenSurface *rs, RenFont **fonts, const char *text, size_t len, float x, int y, RenColor color) {
   SDL_Surface *surface = rs->surface;
-  const RenRect clip = window_renderer.clip;
+  SDL_Rect clip;
+  SDL_GetClipRect(surface, &clip);
 
   const int surface_scale = rs->scale;
   float pen_x = x * surface_scale;
@@ -387,7 +388,7 @@ float ren_draw_text(RenSurface *rs, RenFont **fonts, const char *text, size_t le
   int bytes_per_pixel = surface->format->BytesPerPixel;
   const char* end = text + len;
   uint8_t* destination_pixels = surface->pixels;
-  int clip_end_x = clip.x + clip.width, clip_end_y = clip.y + clip.height;
+  int clip_end_x = clip.x + clip.w, clip_end_y = clip.y + clip.h;
 
   RenFont* last = NULL;
   float last_pen_x = x;
@@ -488,13 +489,14 @@ void ren_draw_rect(RenSurface *rs, RenRect rect, RenColor color) {
   rect.width  *= rs->scale;
   rect.height *= rs->scale;
 
-  const RenRect clip = window_renderer.clip;
+  SDL_Rect clip;
+  SDL_GetClipRect(surface, &clip);
   int x1 = rect.x < clip.x ? clip.x : rect.x;
   int y1 = rect.y < clip.y ? clip.y : rect.y;
   int x2 = rect.x + rect.width;
   int y2 = rect.y + rect.height;
-  x2 = x2 > clip.x + clip.width ? clip.x + clip.width : x2;
-  y2 = y2 > clip.y + clip.height ? clip.y + clip.height : y2;
+  x2 = x2 > clip.x + clip.w ? clip.x + clip.w : x2;
+  y2 = y2 > clip.y + clip.h ? clip.y + clip.h : y2;
 
   SDL_Rect dest_rect = { x1, y1, x2 - x1, y2 - y1 };
   if (color.a == 0xff) {
