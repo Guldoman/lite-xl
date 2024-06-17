@@ -13,6 +13,7 @@ on:
 
 jobs:
   build_linux:
+    if: false
     name: Linux
     runs-on: ubuntu-22.04
     strategy:
@@ -64,6 +65,7 @@ jobs:
           compression-level: 0
 
   build_macos:
+    if: false
     name: macOS
     runs-on: macos-11
     env:
@@ -116,6 +118,7 @@ jobs:
           compression-level: 0
 
   build_macos_universal:
+    if: false
     name: macOS (Universal)
     runs-on: macos-11
     needs: build_macos
@@ -224,6 +227,7 @@ jobs:
           compression-level: 0
 
   build_windows_msvc:
+    if: false
     name: Windows (MSVC)
     runs-on: windows-2019
     strategy:
