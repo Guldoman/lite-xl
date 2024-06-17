@@ -1221,6 +1221,7 @@ sdl2_dep = declare_dependency(
     link_with : sdl2,
     dependencies : deps,
     include_directories : core_inc,
+    compile_args : c_args,
 )
 
 test_deps = []
