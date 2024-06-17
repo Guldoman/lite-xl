@@ -404,25 +404,10 @@ else
     iconv_dep = fake_dep
 endif
 
-iconv_in_libc = cc.links('''
-    #define LIBICONV_PLUG 1
-    #include <iconv.h>
-    int main(int argc, char **argv) { iconv_open("", ""); return 0; }''',
-    name: 'libc iconv_open test',
-    dependencies: iconv_dep,
-)
-
-iconv_in_libiconv = cc.links('''
-    #include <iconv.h>
-    int main(int argc, char **argv) { iconv_open("", ""); return 0; }''',
-    name: 'libiconv iconv_open test',
-    dependencies: iconv_dep,
-)
-
-if iconv_in_libc or iconv_in_libiconv
-    cdata.set('HAVE_ICONV', 1)
-    if iconv_dep.found() and iconv_in_libiconv
-        cdata.set('SDL_USE_LIBICONV', 1)
+if cc.links('#include <iconv.h>\nint main() { iconv_open("", ""); }', name : 'iconv_open test', dependencies : iconv_dep)
+    cdata.set10('HAVE_ICONV', true)
+    cdata.set10('HAVE_SYSTEM_ICONV', true)
+    if iconv_dep.found()
         core_deps += iconv_dep
     endif
 endif
