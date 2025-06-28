@@ -1,0 +1,495 @@
+# dep_option(SDL_DEPS_SHARED "Load dependencies dynamically" ON SDL_SHARED_AVAILABLE OFF)
+
+option(
+    'use_audio',
+    type: 'feature',
+    description: 'Enable the Audio subsystem',
+)
+
+option(
+    'use_video',
+    type: 'feature',
+    description: 'Enable the Video subsystem',
+)
+
+option(
+    'use_gpu',
+    type: 'feature',
+    description: 'Enable the GPU subsystem',
+)
+
+option(
+    'use_render',
+    type: 'feature',
+    description: 'Enable the Renderer subsystem. Requires use_video',
+)
+
+option(
+    'use_camera',
+    type: 'feature',
+    description: 'Enable the Camera subsystem. Requires use_video',
+)
+# TODO: camera also has pipewire driver
+
+option(
+    'use_joystick',
+    type: 'feature',
+    description: 'Enable the Joystick subsystem',
+)
+
+option(
+    'use_haptic',
+    type: 'feature',
+    description: 'Enable the Haptic subsystem',
+)
+
+option(
+    'use_hidapi',
+    type: 'feature',
+    description: 'Enable the HIDAPI subsystem',
+)
+
+option(
+    'use_power',
+    type: 'feature',
+    description: 'Enable the Power subsystem',
+)
+
+option(
+    'use_sensor',
+    type: 'feature',
+    description: 'Enable the Sensor subsystem',
+)
+
+option(
+    'use_dialog',
+    type: 'feature',
+    description: 'Enable the Dialog subsystem',
+)
+
+########
+
+# cmake_dependent_option(SDL_FRAMEWORK "Build SDL libraries as Apple Framework" OFF "APPLE" OFF)
+
+option(
+    'install',
+    type: 'feature',
+    description: 'Enable installation of SDL3. Requires SDL3_MAINPROJECT',
+)
+
+option(
+    'install_cpack',
+    type: 'feature',
+    description: 'Create binary SDL3 archive using CPack. Requires install: true',
+)
+
+option(
+    'install_docs',
+    type: 'feature',
+    description: 'Install docs for SDL3. Requires install: true',
+)
+
+option(
+    'uninstall',
+    type: 'feature',
+    description: 'Enable uninstallation of SDL3. Requires install: true',
+)
+
+# SDL_PRESEED
+
+option(
+    'relocatable',
+    type: 'feature',
+    description: 'Create relocatable SDL package. Requires install: true',
+    # TODO: always active on MSVC
+)
+
+# SDL_ANDROID_JAR
+
+option(
+    'assertions',
+    type: 'combo',
+    value: 'auto',
+    choices: ['auto', 'disabled', 'release', 'enabled', 'paranoid'],
+    description: 'Enable internal sanity checks',
+)
+
+option(
+    'assembly',
+    type: 'boolean',
+    value: true,
+    description: 'Enable assembly routines',
+)
+
+option(
+    'assembly_avx',
+    type: 'boolean',
+    value: true,
+    description: 'Use AVX assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_avx2',
+    type: 'boolean',
+    value: true,
+    description: 'Use AVX2 assembly routines',
+)
+
+option(
+    'assembly_avx512f',
+    type: 'boolean',
+    value: true,
+    description: 'Use AVX512F assembly routines',
+)
+
+option(
+    'assembly_sse',
+    type: 'boolean',
+    value: true,
+    description: 'Use SSE assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_sse2',
+    type: 'boolean',
+    value: true,
+    description: 'Use SSE2 assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_sse3',
+    type: 'boolean',
+    value: true,
+    description: 'Use SSE3 assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_sse4_1',
+    type: 'boolean',
+    value: true,
+    description: 'Use SSE4.1 assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_sse4_2',
+    type: 'boolean',
+    value: true,
+    description: 'Use SSE4.2 assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_mmx',
+    type: 'boolean',
+    value: true,
+    description: 'Use MMX assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_altivec',
+    type: 'boolean',
+    value: true,
+    description: 'Use Altivec assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_armneon',
+    type: 'boolean',
+    value: true,
+    description: 'Use NEON assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_lsx',
+    type: 'boolean',
+    value: true,
+    description: 'Use LSX assembly routines. Requires assembly: true',
+)
+
+option(
+    'assembly_lasx',
+    type: 'boolean',
+    value: true,
+    description: 'Use LASX assembly routines. Requires assembly: true',
+)
+
+option(
+    'system_libc',
+    type: 'boolean',
+    value: true,
+    description: 'Use the system C library',
+)
+
+option(
+    'system_iconv',
+    type: 'feature',
+    description: 'Use iconv() from system-installed libraries',
+    # TODO: false on windows
+)
+
+option(
+    'prefer_libiconv',
+    type: 'boolean',
+    value: false,
+    description: 'Prefer iconv() from libiconv, if available, over libc version',
+)
+
+option(
+    'gcc_atomics',
+    type: 'feature',
+    description: 'Use gcc builtin atomics',
+    # TODO: true on gcc, clang, intel's cc and qcc(?)
+)
+
+option(
+    'dbus',
+    type: 'feature',
+    description: 'Enable D-Bus support',
+    # TODO: true on unix-like
+)
+
+option(
+    'liburing',
+    type: 'feature',
+    description: 'Enable liburing support',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_diskaudio',
+    type: 'feature',
+    description: 'Support the disk writer audio driver. Requires use_audio: true',
+)
+
+option(
+    'use_audio_dummyaudio',
+    type: 'feature',
+    description: 'Support the dummy audio driver. Requires use_audio: true',
+)
+
+option(
+    'use_video_dummyvideo',
+    type: 'feature',
+    description: 'Use dummy video driver. Requires use_video: true',
+)
+
+option(
+    'ibus',
+    type: 'feature',
+    description: 'Enable IBus support',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_video_opengl',
+    type: 'feature',
+    description: 'Include OpenGL support. Requires use_video: true',
+    # TODO: false on ios, visionos, tvos, watchos
+)
+
+option(
+    'use_video_opengles',
+    type: 'feature',
+    description: 'Include OpenGL ES support. Requires use_video: true',
+    # TODO: false on ios, visionos, tvos, watchos
+)
+
+option(
+    'pthreads',
+    type: 'feature',
+    description: 'Use POSIX threads for multi-threading',
+    # TODO: true on mac and unix-like, false on emscrpten
+)
+
+option(
+    'pthreads_sem',
+    type: 'feature',
+    description: 'Use pthread semaphores. Requires pthreads: true',
+    # TODO: true on mac and unix-like, false on emscrpten
+)
+
+option(
+    'use_audio_oss',
+    type: 'feature',
+    description: 'Support the OSS audio API. Requires use_audio: true',
+    # TODO: true on unix-like and riscos, false on linux, netbsd, openbsd
+)
+
+option(
+    'use_audio_alsa',
+    type: 'feature',
+    description: 'Support the ALSA audio API. Requires use_audio: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_alsa_shared',
+    type: 'feature',
+    description: 'Dynamically load ALSA audio support. Requires use_audio_alsa: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_audio_jack',
+    type: 'feature',
+    description: 'Support the JACK audio API. Requires use_audio: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_jack_shared',
+    type: 'feature',
+    description: 'Dynamically load JACK audio support. Requires use_audio_jack: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_audio_pipewire',
+    type: 'feature',
+    description: 'Support the Pipewire audio API. Requires use_audio: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_pipewire_shared',
+    type: 'feature',
+    description: 'Dynamically load Pipewire support. Requires use_audio_pipewire: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_audio_pulseaudio',
+    type: 'feature',
+    description: 'Support the PulseAudio audio API. Requires use_audio: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_pulseaudio_shared',
+    type: 'feature',
+    description: 'Dynamically load PulseAudio support. Requires use_audio_pulseaudio: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_audio_sndio',
+    type: 'feature',
+    description: 'Support the sndio audio API. Requires use_audio: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_audio_sndio_shared',
+    type: 'feature',
+    description: 'Dynamically load sndio support. Requires use_audio_sndio: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'rpath',
+    type: 'feature',
+    description: 'Use an rpath when linking SDL',
+    # TODO: true on unix-like, false on android, SDL_FRAMEWORK (Apple)
+)
+
+option(
+    'clock_gettime',
+    type: 'feature',
+    description: 'Use clock_gettime() instead of gettimeofday()',
+    # TODO: true on unix-like and android
+)
+
+option(
+    'use_video_x11',
+    type: 'feature',
+    description: 'Use X11 video driver. Requires use_video: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_video_x11_shared',
+    type: 'feature',
+    description: 'Dynamically load X11 support. Requires use_video_x11: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_video_x11_xcursor',
+    type: 'feature',
+    description: 'Enable Xcursor support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xdbe',
+    type: 'feature',
+    description: 'Enable Xdbe support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xinput',
+    type: 'feature',
+    description: 'Enable XInput support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xfixes',
+    type: 'feature',
+    description: 'Enable Xfixes support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xrandr',
+    type: 'feature',
+    description: 'Enable Xrandr support. Requires use_video_x11: true',
+    # TODO: false on solaris
+)
+
+option(
+    'use_video_x11_xscrnsaver',
+    type: 'feature',
+    description: 'Enable Xscrnsaver support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xshape',
+    type: 'feature',
+    description: 'Enable XShape support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_x11_xsync',
+    type: 'feature',
+    description: 'Enable Xsync support. Requires use_video_x11: true',
+)
+
+option(
+    'use_video_wayland',
+    type: 'feature',
+    description: 'Use Wayland video driver. Requires use_video: true',
+    # TODO: true on unix-like
+)
+
+option(
+    'use_video_wayland_shared',
+    type: 'feature',
+    description: 'Dynamically load Wayland support. Requires use_video_wayland: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_video_wayland_libdecor',
+    type: 'feature',
+    description: 'Use client-side window decorations on Wayland. Requires use_video_wayland: true',
+)
+
+option(
+    'use_video_wayland_libdecor_shared',
+    type: 'feature',
+    description: 'Dynamically load libdecor support. Requires use_video_wayland_libdecor: true and use_video_wayland_shared: true',
+    # TODO: requires SDL_DEPS_SHARED
+)
+
+option(
+    'use_libudev',
+    type: 'feature',
+    description: 'Enable libudev support',
+)
