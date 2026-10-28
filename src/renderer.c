@@ -170,7 +170,7 @@ static int font_set_render_options(RenFont* font) {
   if (font->antialiasing == FONT_ANTIALIASING_SUBPIXEL) {
     switch (font->hinting) {
       case FONT_HINTING_NONE: FT_Library_SetLcdFilter(library, FT_LCD_FILTER_NONE); break;
-      case FONT_HINTING_SLIGHT:
+      case FONT_HINTING_SLIGHT: FT_Library_SetLcdFilter(library, FT_LCD_FILTER_LIGHT); break;
       case FONT_HINTING_FULL: FT_Library_SetLcdFilter(library, FT_LCD_FILTER_DEFAULT); break;
     }
     return FT_RENDER_MODE_LCD;
